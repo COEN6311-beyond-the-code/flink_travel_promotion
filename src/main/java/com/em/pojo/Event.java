@@ -5,10 +5,11 @@ import java.io.Serializable;
 public class Event implements Serializable {
     public Long timestamp;
     public String category;
-    public String itemId;
-    public String userId;
+    public Integer itemId;
+    public Long userId;
 
-    public Event(long timestamp, String category, String itemId, String userId) {
+
+    public Event(Long timestamp, String category, Integer itemId, Long userId) {
         this.timestamp = timestamp;
         this.category = category;
         this.itemId = itemId;
@@ -44,19 +45,19 @@ public class Event implements Serializable {
         this.category = category;
     }
 
-    public String getItemId() {
+    public Integer getItemId() {
         return itemId;
     }
 
-    public void setItemId(String itemId) {
+    public void setItemId(Integer itemId) {
         this.itemId = itemId;
     }
 
-    public String getUserId() {
+    public Long getUserId() {
         return userId;
     }
 
-    public void setUserId(String userId) {
+    public void setUserId(Long userId) {
         this.userId = userId;
     }
 }
