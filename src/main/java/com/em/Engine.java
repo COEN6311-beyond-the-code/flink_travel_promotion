@@ -3,27 +3,24 @@ package com.em;
 import com.em.pojo.Event;
 import com.em.pojo.Rule;
 import com.em.source.MySQLSource;
-import com.em.transform.CountAggregateFunction;
-import com.em.transform.CustomWindowAssigner;
-import com.em.transform.RuleBroadcastProcessFunction;
+import com.em.transform.BroadcastStateDescriptors;
+import com.em.transform.MyKeyedBroadcastProcessFunction;
 import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
-import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.functions.RichMapFunction;
+import org.apache.flink.api.common.state.MapStateDescriptor;
+import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
+import org.apache.flink.api.common.typeinfo.TypeHint;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.api.java.functions.KeySelector;
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.*;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 
-import java.io.InputStream;
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
-import java.util.Random;
 
 public class Engine {
     public static void main(String[] args) throws Exception {
@@ -39,27 +36,31 @@ public class Engine {
                 return rule.toString();
             }
         }).print();
-        DataStream<Event> eventDataStream = env.addSource(new MockEventSource()).assignTimestampsAndWatermarks(WatermarkStrategy.<Event>forMonotonousTimestamps()
-                .withTimestampAssigner(new SerializableTimestampAssigner<Event>() {
-                    @Override
-                    public long extractTimestamp(Event element, long recordTimestamp) {
-                        return element.timestamp;
-                    }
-                }));
+        DataStream<Event> eventDataStream = env
+                .addSource(new MockEventSource())
+                .assignTimestampsAndWatermarks(WatermarkStrategy.<Event>forMonotonousTimestamps()
+                        .withTimestampAssigner((SerializableTimestampAssigner<Event>) (element, recordTimestamp) -> element.timestamp));
 
-        // 将规则转换为广播流
-        SingleOutputStreamOperator<Rule> ruleBroadcastStream = env
-                .fromCollection(rules);
-        // 将事件流与广播流连接
-        DataStream<Tuple2<Event, Rule>> connectedStream = eventDataStream.keyBy(
-                        new KeySelector<Event, Object>() {
-                            public Tuple3<Long, Integer, String> getKey(Event event) {
-                                return Tuple3.of(event.getUserId(), event.getItemId(), event.getCategory());
-                            }
-                        }).connect(ruleBroadcastStream)
-                .process(new RuleBroadcastProcessFunction());
-        ruleBroadcastStream.print();
+// Key by userId, itemId, and category
+        KeyedStream<Event, Tuple3<Long, Integer, String>> keyedStream = eventDataStream
+                .keyBy(new KeySelector<Event, Tuple3<Long, Integer, String>>() {
+                    @Override
+                    public Tuple3<Long, Integer, String> getKey(Event event) throws Exception {
+                        return new Tuple3<>(event.userId, event.itemId, event.category);
+                    }
+                });
+
+
+
+        // 将ruleDataStream转换为广播流
+        BroadcastStream<Rule> ruleBroadcastStream = env.fromCollection(rules).broadcast(BroadcastStateDescriptors.RULES_BROADCAST_STATE_DESCRIPTOR);
+
+        // 将eventDataStream与广播流连接
+        SingleOutputStreamOperator<String> process = keyedStream
+                .connect(ruleBroadcastStream)
+                .process(new MyKeyedBroadcastProcessFunction());
         eventDataStream.print();
+        process.print();
         env.execute("Event Processing Job");
 
     }
