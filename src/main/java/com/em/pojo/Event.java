@@ -4,30 +4,24 @@ import java.io.Serializable;
 
 public class Event implements Serializable {
     public Long timestamp;
+
     public String category;
     public Integer itemId;
     public Long userId;
+    public Integer type;
 
 
-    public Event(Long timestamp, String category, Integer itemId, Long userId) {
+    public Event(Long timestamp, String category, Integer itemId, Long userId,Integer type) {
         this.timestamp = timestamp;
         this.category = category;
         this.itemId = itemId;
         this.userId = userId;
+        this.type = type;
     }
 
     public Event() {
     }
 
-    @Override
-    public String toString() {
-        return "Event{" +
-                "timestamp=" + timestamp +
-                ", category='" + category + '\'' +
-                ", itemId='" + itemId + '\'' +
-                ", userId='" + userId + '\'' +
-                '}';
-    }
 
     public Long getTimestamp() {
         return timestamp;
@@ -59,5 +53,24 @@ public class Event implements Serializable {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public Integer getType() {
+        return type;
+    }
+
+    public void setType(Integer type) {
+        this.type = type;
+    }
+
+    @Override
+    public String toString() {
+        return "Event{" +
+                "timestamp=" + timestamp +
+                ", category='" + category + '\'' +
+                ", itemId=" + itemId +
+                ", userId=" + userId +
+                ", type=" + type +
+                '}';
     }
 }

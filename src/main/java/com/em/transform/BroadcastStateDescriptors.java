@@ -10,9 +10,9 @@ import org.apache.flink.api.common.typeinfo.Types;
 
 public class BroadcastStateDescriptors {
 
-    public static final MapStateDescriptor<Void, Rule> RULES_BROADCAST_STATE_DESCRIPTOR = new MapStateDescriptor<>(
+    public static final MapStateDescriptor<String, Rule> RULES_BROADCAST_STATE_DESCRIPTOR = new MapStateDescriptor<>(
             "RulesBroadcastState",
-            Types.VOID,
+            BasicTypeInfo.STRING_TYPE_INFO,
             TypeInformation.of(new TypeHint<Rule>() {})
     );
 }

@@ -15,7 +15,9 @@ import java.util.Properties;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;public class MySQLSource extends RichSourceFunction<Rule> {
+import java.util.concurrent.TimeUnit;
+
+public class MySQLSource extends RichSourceFunction<Rule> {
 
     private volatile boolean running = true;
     private List<Rule> rules = new ArrayList<>();
@@ -38,13 +40,13 @@ import java.util.concurrent.TimeUnit;public class MySQLSource extends RichSource
     public void run(SourceContext<Rule> ctx) throws Exception {
         while (running) {
             // Sleep for 5 minutes
-            TimeUnit.MINUTES.sleep(5);
             // Load data from MySQL table into memory
             loadDataFromMySQL();
             // Emit the collected data
             for (Rule rule : rules) {
                 ctx.collect(rule);
             }
+            TimeUnit.MINUTES.sleep(5);
         }
     }
 
@@ -58,7 +60,7 @@ import java.util.concurrent.TimeUnit;public class MySQLSource extends RichSource
         List<Rule> newRules = new ArrayList<>();
         try {
             conn = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = conn.prepareStatement("SELECT id, category, item_id, browse_times, windows_time FROM rule");
+            PreparedStatement statement = conn.prepareStatement("SELECT id, category, item_id, browse_times, windows_time, wait_time FROM rule");
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
                     Rule rule = new Rule(
@@ -66,7 +68,8 @@ import java.util.concurrent.TimeUnit;public class MySQLSource extends RichSource
                             resultSet.getString("category"),
                             resultSet.getInt("item_id"),
                             resultSet.getInt("browse_times"),
-                            resultSet.getInt("windows_time")
+                            resultSet.getInt("windows_time"),
+                            resultSet.getInt("wait_time")
                     );
                     newRules.add(rule);
                 }

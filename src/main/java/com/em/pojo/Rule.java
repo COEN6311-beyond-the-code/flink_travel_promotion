@@ -8,16 +8,20 @@ public class Rule implements Serializable {
     public Integer itemId;
     public Integer browseTimes;
     public Integer windowsTime;
+    public Integer waitTime;
+
 
     public Rule() {
     }
 
-    public Rule(Integer id, String category, Integer itemId, Integer browseTimes, Integer windowsTime) {
+
+    public Rule(Integer id, String category, Integer itemId, Integer browseTimes, Integer windowsTime, Integer waitTime) {
         this.id = id;
         this.category = category;
         this.itemId = itemId;
         this.browseTimes = browseTimes;
         this.windowsTime = windowsTime;
+        this.waitTime = waitTime;
     }
 
     public Integer getId() {
@@ -60,6 +64,14 @@ public class Rule implements Serializable {
         this.windowsTime = windowsTime;
     }
 
+    public Integer getWaitTime() {
+        return waitTime;
+    }
+
+    public void setWaitTime(Integer waitTime) {
+        this.waitTime = waitTime;
+    }
+
     @Override
     public String toString() {
         return "Rule{" +
@@ -68,6 +80,7 @@ public class Rule implements Serializable {
                 ", itemId=" + itemId +
                 ", browseTimes=" + browseTimes +
                 ", windowsTime=" + windowsTime +
+                ", waitTime=" + waitTime +
                 '}';
     }
 }
