@@ -26,11 +26,9 @@ public class CustomWindowAssigner extends WindowAssigner<Object, TimeWindow> {
 
     @Override
     public Collection<TimeWindow> assignWindows(Object element, long timestamp, WindowAssignerContext context) {
-        // 获取元素的键值
         Event event = (Event) element;
         Tuple3<Long, Integer, String> key = Tuple3.of(event.getUserId(), event.getItemId(), event.getCategory());
 
-        // 在规则集中查找对应的规则
         Long windowSize = findWindowSize(key.f1, key.f2);
 
         if (windowSize == null) {
@@ -52,13 +50,11 @@ public class CustomWindowAssigner extends WindowAssigner<Object, TimeWindow> {
 
     @Override
     public Trigger<Object, TimeWindow> getDefaultTrigger(StreamExecutionEnvironment env) {
-        // 返回默认触发器，这里使用 ProcessingTime 触发器
         return ProcessingTimeTrigger.create();
     }
 
     @Override
     public TypeSerializer<TimeWindow> getWindowSerializer(ExecutionConfig executionConfig) {
-        // 返回窗口序列化器，这里使用默认序列化器
         return new TimeWindow.Serializer();
     }
 

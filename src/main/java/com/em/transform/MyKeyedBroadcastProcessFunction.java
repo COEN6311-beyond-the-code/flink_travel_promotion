@@ -23,7 +23,6 @@ public class MyKeyedBroadcastProcessFunction extends KeyedBroadcastProcessFuncti
     private transient ValueState<Integer> windowsTime;
     private transient ValueState<Integer> ruleId;
     //milliSecond
-
     private transient ValueState<Integer> waitingTime;
     //save latest browse timer trigger time
 

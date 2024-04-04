@@ -65,7 +65,6 @@ public class EventProcessingFunction extends KeyedProcessFunction<Tuple3<Long, I
             }
         }
 
-        // 更新 key 的计数
         Long currentCount = windowCountState.get(key);
         if (currentCount == null) {
             currentCount = 0L;
@@ -73,18 +72,15 @@ public class EventProcessingFunction extends KeyedProcessFunction<Tuple3<Long, I
         currentCount += 1;
         windowCountState.put(key, currentCount);
 
-        // 在超过阈值时触发操作
         if (currentCount > 3) {
-            collector.collect(Tuple2.of(key.f0, key.f2 + ": " + currentCount)); // 打印出超过阈值的计数结果
+            collector.collect(Tuple2.of(key.f0, key.f2 + ": " + currentCount));
         }
 
-        // 设置定时器，在窗口结束时清除窗口计数
         context.timerService().registerProcessingTimeTimer(context.timerService().currentProcessingTime() + windowSize);
     }
 
     @Override
     public void onTimer(long timestamp, OnTimerContext ctx, Collector<Tuple2<Long, String>> out) throws Exception {
-        // 清除窗口计数
         for (Map.Entry<Tuple3<Long, Integer, String>, Long> entry : windowCountState.entries()) {
             windowCountState.remove(entry.getKey());
         }
