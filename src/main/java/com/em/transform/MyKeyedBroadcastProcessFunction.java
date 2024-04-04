@@ -5,6 +5,7 @@ import com.em.pojo.Event;
 import com.em.pojo.EventTypeEnum;
 import com.em.pojo.Result;
 import com.em.pojo.Rule;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.state.*;
 import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.api.java.tuple.Tuple3;
@@ -14,6 +15,7 @@ import org.apache.flink.util.Collector;
 
 import java.util.*;
 
+@Slf4j
 public class MyKeyedBroadcastProcessFunction extends KeyedBroadcastProcessFunction<Tuple3<Long, Integer, String>, Event, Rule, Result> {
     //save browse event time
     private transient ListState<Long> windowCountState;
@@ -54,6 +56,7 @@ public class MyKeyedBroadcastProcessFunction extends KeyedBroadcastProcessFuncti
 
     @Override
     public void processElement(Event value, ReadOnlyContext ctx, Collector<Result> out) throws Exception {
+        log.info("receive event:{}", JSON.toJSONString(value));
         ReadOnlyBroadcastState<String, Rule> broadcastState = ctx.getBroadcastState(BroadcastStateDescriptors.RULES_BROADCAST_STATE_DESCRIPTOR);
         Rule rule = null;
         for (Map.Entry<String, Rule> entry : broadcastState.immutableEntries()) {
@@ -67,6 +70,7 @@ public class MyKeyedBroadcastProcessFunction extends KeyedBroadcastProcessFuncti
             }
         }
         if (rule != null) {
+            log.info("evevt:{},ruleId:{}", JSON.toJSONString(value), rule.id);
             long eventTime = value.getTimestamp();
             Integer eventType = value.getType();
             if (eventType.equals(EventTypeEnum.VIEW.getType())) {
@@ -81,7 +85,7 @@ public class MyKeyedBroadcastProcessFunction extends KeyedBroadcastProcessFuncti
                 windowCountState.add(eventTime);
                 Integer validCount = clearOldEventAndRCalculateValidCount(eventTime);
                 if (validCount >= rule.browseTimes) {
-                    System.out.println("meet browse requirement");
+                    log.info("meet browse requirement" + JSON.toJSONString(value));
                     ctx.timerService().registerProcessingTimeTimer(eventTime + waitingTime.value());
                     browseAchievement.addAll(Collections.singletonList(eventTime));
                 }
@@ -100,14 +104,25 @@ public class MyKeyedBroadcastProcessFunction extends KeyedBroadcastProcessFuncti
         if (timerEventTime.value() != null && timerEventTime.value().equals(timestamp - windowsTime.value())) {
             Integer validCount = clearOldEventAndRCalculateValidCount(timestamp);
             if (validCount == 0) {
-                System.out.println("clear timerEventTime," + timestamp);
+                log.info("clear timerEventTime," + timestamp);
                 windowCountState.clear();
                 timerEventTime.clear();
             }
         } else {
             Result result = new Result(timestamp, ctx.getCurrentKey().f0, ruleId.value());
-            System.out.println("send to mq" + JSON.toJSONString(result));
+            log.info("send to mq" + JSON.toJSONString(result));
+            //clear achievementList
+            Iterator<Long> browseAchievements = browseAchievement.get().iterator();
+            while (browseAchievements.hasNext()) {
+                long browseAchievementTime = browseAchievements.next();
+                long expectedNotifyTime = browseAchievementTime + waitingTime.value();
+                if (expectedNotifyTime == timestamp) {
+                    log.info("clear achievement when send mq,timestamp:" + expectedNotifyTime);
+                }
+                browseAchievements.remove();
+            }
             out.collect(result);
+
         }
 
     }
@@ -135,14 +150,14 @@ public class MyKeyedBroadcastProcessFunction extends KeyedBroadcastProcessFuncti
 
     private void clearNotifyTimer(Event event, ReadOnlyContext ctx) throws Exception {
         Iterator<Long> browseAchievements = browseAchievement.get().iterator();
-        System.out.println("achievement purchase,event:" + event.toString());
+        log.info("achievement purchase,event:" + event.toString());
 
         //clear all notify Timer
         while (browseAchievements.hasNext()) {
             long browseAchievementTime = browseAchievements.next();
             long expectedNotifyTime = browseAchievementTime + waitingTime.value();
             ctx.timerService().deleteProcessingTimeTimer(expectedNotifyTime);
-            System.out.println("purchase clear achievement Timer," + expectedNotifyTime);
+            log.info("purchase clear achievement Timer," + expectedNotifyTime);
             browseAchievements.remove();
         }
         browseAchievement.clear();

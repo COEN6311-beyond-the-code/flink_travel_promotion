@@ -1,6 +1,14 @@
 package com.em.pojo;
 
-public class Result {
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
+
+@Getter
+@NoArgsConstructor
+public class Result implements Serializable {
+    // Getter和Setter方法
     private long time;
     private Long userId;
     private Integer ruleId;
@@ -11,25 +19,12 @@ public class Result {
         this.ruleId = ruleId;
     }
 
-    // Getter和Setter方法
-    public long getTime() {
-        return time;
-    }
-
     public void setTime(long time) {
         this.time = time;
     }
 
-    public Long getUserId() {
-        return userId;
-    }
-
     public void setUserId(Long userId) {
         this.userId = userId;
-    }
-
-    public Integer getRuleId() {
-        return ruleId;
     }
 
     public void setRuleId(Integer ruleId) {

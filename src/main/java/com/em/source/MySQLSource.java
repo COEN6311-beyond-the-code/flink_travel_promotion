@@ -1,9 +1,9 @@
 package com.em.source;
 
+import com.alibaba.fastjson.JSON;
 import com.em.pojo.Rule;
-import org.apache.flink.api.common.functions.RichMapFunction;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
 
 import java.io.FileInputStream;
@@ -16,7 +16,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
+@Slf4j
 public class MySQLSource extends RichSourceFunction<Rule> {
 
     private volatile boolean running = true;
@@ -46,6 +46,7 @@ public class MySQLSource extends RichSourceFunction<Rule> {
             for (Rule rule : rules) {
                 ctx.collect(rule);
             }
+            log.info("refresh rules from mysql:{}", JSON.toJSONString(rules));
             TimeUnit.MINUTES.sleep(5);
         }
     }

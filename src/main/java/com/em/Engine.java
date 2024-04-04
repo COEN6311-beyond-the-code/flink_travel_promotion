@@ -8,6 +8,8 @@ import com.em.source.MySQLSource;
 import com.em.source.RabbitMQSource;
 import com.em.transform.BroadcastStateDescriptors;
 import com.em.transform.MyKeyedBroadcastProcessFunction;
+import lombok.extern.log4j.Log4j;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.RichMapFunction;
@@ -19,7 +21,6 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 import java.util.ArrayList;
 import java.util.List;
-
 public class Engine {
     public static void main(String[] args) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -101,6 +102,8 @@ public class Engine {
 //                    // Simulate the interval between events
 //                }
 //            }
+//            {"timestamp": 1712180317679, "category": "Category A", "itemId": 1001, "userId": 1, "type": 1}
+
         }
 
         @Override

@@ -3,7 +3,6 @@ package com.em.pojo;
 import lombok.Getter;
 
 @Getter
-
 public enum EventTypeEnum {
     VIEW(1, "View"),
     PURCHASE(2, "Purchase");
