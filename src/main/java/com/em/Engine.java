@@ -17,6 +17,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 public class Engine {
     public static void main(String[] args) throws Exception {
+        //promotion system
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         DataStream<Event> eventDataStream = env
 //                .addSource(new MockEventSource())
