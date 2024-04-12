@@ -47,7 +47,7 @@ public class MySQLSource extends RichSourceFunction<Rule> {
                 ctx.collect(rule);
             }
             log.info("refresh rules from mysql:{}", JSON.toJSONString(rules));
-            TimeUnit.MINUTES.sleep(5);
+            TimeUnit.SECONDS.sleep(20);
         }
     }
 
